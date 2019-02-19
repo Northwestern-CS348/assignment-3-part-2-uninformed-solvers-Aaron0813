@@ -3,13 +3,13 @@ from read import *
 from util import *
 import read
 
-class TowerOfHanoiGame(GameMaster):
 
+class TowerOfHanoiGame(GameMaster):
     def __init__(self):
         super().__init__()
         # use list to store states
         # self.states = [[] for i in range(3)]
-        
+
     def produceMovableQuery(self):
         """
         See overridden parent class method for more information.
@@ -58,7 +58,6 @@ class TowerOfHanoiGame(GameMaster):
             else:
                 tuples.append(tuple())
         return (tuple(tuples))
-        # return tuple(self.states)
 
     def makeMove(self, movable_statement):
         """
@@ -79,29 +78,25 @@ class TowerOfHanoiGame(GameMaster):
         ### Student code goes here
         ### delete obj in previous peg, add it to current peg
         sl = movable_statement.terms
-        # print(movable_statement)
         pre_fact = Fact(["on", sl[0], sl[1]])
-        # print("Pre_Fact")
-        # print(pre_fact)
         next_fact = Fact(["on", sl[0], sl[2]])
-        # print("Next_Fact")
-        # print(next_fact)
-        # if pre_fact in self.kb.facts:
-        #     # print('In it')
-        #     kbf = self.kb._get_fact(pre_fact)
-        #     # print(kbf)
-        # else:
-        #     print("not in it")
+
+        # retract previous fact - change previous state
         self.kb.kb_retract(pre_fact)
+        # if prevoius peg is empty now, add empty fact
+        ask_fact = Fact(["on", "?disk", sl[1]])
+        answer = self.kb.kb_ask(ask_fact)
+        # return False means it's empty
+        if not answer:
+            inferred_fact = Fact(["empty", sl[1]])
+
+        # if new peg previous is empty, then we need to retract it
+        ask_fact = Fact(["empty", sl[2]])
+        answer = th.kb.kb_ask(ask_fact)
+        # fact(empty, sl[2]) do exist, retract it
+        if len(answer) == 0 and answer[0].bindings == []:
+            th.kb.retract(ask_fact)
         self.kb.kb_assert(next_fact)
-        # obj = int(str(sl[0]))
-        # src = sl[1]
-        # dst = sl[2]
-        # src_num = int(str(src[-1:])) - 1
-        # dst_num = int(str(dst[-1:])) - 1
-        # # self.states[src_num].remove(obj)
-        # # self.states[dst_num].insert(0,obj)
-        # pass
 
     def reverseMove(self, movable_statement):
         """
@@ -118,8 +113,8 @@ class TowerOfHanoiGame(GameMaster):
         newList = [pred, sl[0], sl[2], sl[1]]
         self.makeMove(Statement(newList))
 
-class Puzzle8Game(GameMaster):
 
+class Puzzle8Game(GameMaster):
     def __init__(self):
         super().__init__()
 
@@ -132,7 +127,8 @@ class Puzzle8Game(GameMaster):
         Returns:
              A Fact object that could be used to query the currently available moves
         """
-        return parse_input('fact: (movable ?piece ?initX ?initY ?targetX ?targetY)')
+        return parse_input(
+            'fact: (movable ?piece ?initX ?initY ?targetX ?targetY)')
 
     def getGameState(self):
         """
@@ -227,4 +223,3 @@ class Puzzle8Game(GameMaster):
         sl = movable_statement.terms
         newList = [pred, sl[0], sl[3], sl[4], sl[1], sl[2]]
         self.makeMove(Statement(newList))
-

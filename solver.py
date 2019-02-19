@@ -13,7 +13,9 @@ class UninformedSolver(object):
         currentState (GameState): the GameState object to hold the current game state.
         victoryCondition (object): the game state to search for
     """
-
+'''
+use gm.state to as key to store current state is visited or not
+'''
     def __init__(self, gameMaster, victoryCondition):
         self.gm = gameMaster
         self.visited = dict()
