@@ -1,5 +1,5 @@
 from solver import *
-import queue
+from queue import Queue
 
 
 class SolverDFS(UninformedSolver):
@@ -20,12 +20,28 @@ class SolverDFS(UninformedSolver):
             True if the desired solution state is reached, False otherwise
         """
         ### Student code goes here
+        current_state = self.currentState
+        # check current state
+        if current_state.state == self.victoryCondition:
+            return True
+
+        while current_state.nextChildToVisit >= len(current_state.children):
+            # reverse game state
+            self.gm.reverseMove(current_state.requiredMovable)
+            current_state = current_state.parent
+
+
+
+
         return True
 
 
 class SolverBFS(UninformedSolver):
     def __init__(self, gameMaster, victoryCondition):
         super().__init__(gameMaster, victoryCondition)
+        self.queue = Queue()
+        self.queue.put(self.currentState)
+        self.is_init = False
 
     def solveOneStep(self):
         """
@@ -41,13 +57,60 @@ class SolverBFS(UninformedSolver):
             True if the desired solution state is reached, False otherwise
         """
         ### Student code goes here
-        # put current state into queue, ready to go
+        if not self.is_init:
+            self.is_init = True
+            self.solveOneStep()
 
-        q = queue.Queue()
-        current_movable = ""
-        while not q.empty():
-            size = q.qsize()
-            while size > 0:
-                current_state = q.get()
-                if current_movable == current_state.requiredMovable
-        return True
+        if self.queue:
+            target_state = self.queue.get()
+
+            self.go_back_to_root()
+            required_moves = self.generate_move_path(target_state)
+
+            for move in required_moves:
+                self.gm.makeMove(move)
+            # 这个语句的位置也忒精细了吧,搞不好就错了,啧啧啧,受不了
+            self.currentState = target_state
+            self.visited[target_state] = True
+            if target_state.state == self.victoryCondition:
+                return True
+
+            movable_actions = self.gm.getMovables()
+            # print("\n")
+            # print("game state = " + str(self.gm.getGameState()))
+            # print("currentState = " + str(self.currentState.state))
+
+            for move in movable_actions:
+                # print(move)
+                self.gm.makeMove(move)
+                new_state = GameState(self.gm.getGameState(), self.currentState.depth + 1, move)
+                self.currentState.children.append(new_state)
+                new_state.parent = self.currentState
+
+                if new_state in self.visited:
+                    self.gm.reverseMove(move)
+                    continue
+                self.queue.put(new_state)
+                self.visited[new_state] = False
+                self.gm.reverseMove(move)
+
+    def generate_move_path(self, target_state):
+        paths = []
+        current_state = target_state
+        while current_state.parent:
+            move = current_state.requiredMovable
+            paths.insert(0, move)
+            # print("\n")
+            # print(move)
+            # # print(type(move))
+            # print(self.gm.getGameState())
+            # self.gm.reverseMove(move)
+            current_state = current_state.parent
+        return paths
+
+    def go_back_to_root(self, ):
+        current_state = self.currentState
+        while current_state.parent is not None:
+            move = current_state.requiredMovable
+            self.gm.reverseMove(move)
+            current_state = current_state.parent

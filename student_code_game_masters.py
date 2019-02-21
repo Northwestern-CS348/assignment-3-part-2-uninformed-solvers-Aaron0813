@@ -75,28 +75,83 @@ class TowerOfHanoiGame(GameMaster):
         Returns:
             None
         """
-        ### Student code goes here
+        variables = str(movable_statement).split(" ")
+        current_state = self.getGameState()
+
+        # step 1: remove previous fact
+        #  disk1 could be
+        #  (1) the only one on peg1, -- add empty fact and retract Top fact
+        #  (2) or just the top of peg1 -- retract Top fact, and change the disk below it to be top
+        pre_fact = 'fact: (on ' + variables[1] + ' ' + variables[2] + ')'
+        self.kb.kb_retract(parse_input(pre_fact))
+        self.kb.kb_retract(parse_input('fact: (top ' + variables[1] + ' ' + variables[2] + ')'))
+
+        if len(current_state[int(variables[2][-1]) - 1]) == 1:
+            self.kb.kb_assert(parse_input('fact: (empty ' + variables[2] + ')'))
+        else:
+            # print("current_state = " + str(current_state))
+            # print("variables = " + str((variables)))
+            # print("variables = " + str(variables[2]))
+            # print("current_state_content " + str(current_state))
+            index = int(variables[2][-1]) - 1
+            # print(index)
+            # print("" + str(str(current_state[index][1])))
+            inferred_fact = "disk" + str(current_state[int(variables[2][-1]) - 1][1])
+            self.kb.kb_assert(parse_input('fact: (top ' + inferred_fact + ' ' + variables[2] + ')'))
+
+        # step 2: add next fact
+        #  peg2 could be
+        #  (1) empty previous --  retract empty fact and add Top fact
+        #  (2) has other disks -- retract previous Top fact, and and add Top fact
+        if len(current_state[int(variables[3][-2]) - 1]) == 0:
+            self.kb.kb_retract(parse_input('fact: (empty ' + variables[3]))
+        else:
+            inferred_fact = "disk" + str(current_state[int(variables[3][-2]) - 1][0])
+            self.kb.kb_retract(parse_input('fact: (top ' + inferred_fact + ' ' + variables[3]))
+
+        self.kb.kb_assert(parse_input('fact: (top ' + variables[1] + ' ' + variables[3]))
+        self.kb.kb_assert(parse_input('fact: (on ' + variables[1] + ' ' + variables[3]))
+
+        '''
         ### delete obj in previous peg, add it to current peg
+        ### movable disk1 peg1 peg2
         sl = movable_statement.terms
         pre_fact = Fact(["on", sl[0], sl[1]])
         next_fact = Fact(["on", sl[0], sl[2]])
 
-        # retract previous fact - change previous state
+        # step 1: remove previous fact
+        #  disk1 could be
+        #  (1) the only one on peg1, -- add empty fact and retract Top fact
+        #  (2) or just the top of peg1 -- retract Top fact, and change the disk below it to be top
         self.kb.kb_retract(pre_fact)
-        # if prevoius peg is empty now, add empty fact
+        self.kb.kb_retract(Fact(["top", sl[0], sl[1]]))
+        
         ask_fact = Fact(["on", "?disk", sl[1]])
         answer = self.kb.kb_ask(ask_fact)
-        # return False means it's empty
-        if not answer:
-            inferred_fact = Fact(["empty", sl[1]])
 
-        # if new peg previous is empty, then we need to retract it
-        ask_fact = Fact(["empty", sl[2]])
-        answer = th.kb.kb_ask(ask_fact)
-        # fact(empty, sl[2]) do exist, retract it
-        if len(answer) == 0 and answer[0].bindings == []:
-            th.kb.retract(ask_fact)
+        if answer:
+            inferred_fact = Fact(["top", answer[0], sl[1]])
+            self.kb.kb_assert(inferred_fact)
+        else:
+            inferred_fact = Fact(["empty", sl[1]])
+            self.kb.kb_assert(inferred_fact)
+
+        # step 2: add next fact
+        #  peg2 could be
+        #  (1) empty previous --  retract empty fact and add Top fact
+        #  (2) has other disks -- retract previous Top fact, and and add Top fact
+        ask_fact = Fact(["on", "?disk", sl[2]])
+        answer = self.kb.kb_ask(ask_fact)
+        if answer:
+            inferred_fact = Fact(["top", answer[0], sl[1]])
+            self.kb.kb_retract(inferred_fact)
+        else:
+            inferred_fact = Fact(["empty", sl[1]])
+            self.kb.kb_retract(inferred_fact)
+
         self.kb.kb_assert(next_fact)
+        self.kb.kb_assert(Fact(["top", sl[0], sl[2]]))
+        '''
 
     def reverseMove(self, movable_statement):
         """
@@ -165,9 +220,9 @@ class Puzzle8Game(GameMaster):
         ask.append(read.parse_input("fact: (location ?tile pos3 pos3)"))
         asks.append(ask)
 
-        for j in asks:
-            for i in j:
-                print(i)
+        # for j in asks:
+        #     for i in j:
+        #         print(i)
 
         return asks
         # asks.append(read.parse_input("fact: (on ?disk peg2)"))
