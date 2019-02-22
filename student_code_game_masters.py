@@ -7,8 +7,6 @@ import read
 class TowerOfHanoiGame(GameMaster):
     def __init__(self):
         super().__init__()
-        # use list to store states
-        # self.states = [[] for i in range(3)]
 
     def produceMovableQuery(self):
         """
@@ -77,10 +75,8 @@ class TowerOfHanoiGame(GameMaster):
         """
         ### delete obj in previous peg, add it to current peg
         ### movable disk1 peg1 peg2
-        print("\n\n================")
         sl = movable_statement.terms
-        print("Term " + str(sl))
-        # print(sl)
+
         pre_fact = Fact(["on", sl[0], sl[1]])
         next_fact = Fact(["on", sl[0], sl[2]])
 
@@ -95,18 +91,11 @@ class TowerOfHanoiGame(GameMaster):
         answer = self.ask_sort(ask_fact)
 
         if answer:
-            for a in answer:
-                # print(type(a))
-                print(a)
-            # print(type(answer[0]))
-            # print("answer = " + str((answer[0].bindings[0]).constant))
-            # print(type(sl[1]))
+
             inferred_fact = Fact(["top", answer[0], sl[1]])
-            print("inferred_fact = " + str(inferred_fact.statement))
             self.kb.kb_assert(inferred_fact)
         else:
             inferred_fact = Fact(["empty", sl[1]])
-            print("inferred_fact = " + str(inferred_fact.statement))
             self.kb.kb_assert(inferred_fact)
 
         # step 2: add next fact
@@ -116,11 +105,7 @@ class TowerOfHanoiGame(GameMaster):
         ask_fact = Fact(["on", "?disk", sl[2]])
         answer = self.ask_sort(ask_fact)
         if answer:
-            for a in answer:
-                # print(type(a))
-                print(a)
             inferred_fact = Fact(["top", answer[0], sl[2]])
-            print("inferred_fact = " + str(inferred_fact.statement))
             self.kb.kb_retract(inferred_fact)
         else:
             inferred_fact = Fact(["empty", sl[2]])
@@ -185,52 +170,49 @@ class Puzzle8Game(GameMaster):
         Returns:
             A Tuple of Tuples that represent the game state
         """
+    ##############
         # 如果没有,结果为false,就可以标注为empty
         ### Student code goes here
         asks = []
         # fact: (location tile1 pos1 pos1)
         ask = []
         ask.append(read.parse_input("fact: (location ?tile pos1 pos1)"))
-        ask.append(read.parse_input("fact: (location ?tile pos1 pos2)"))
-        ask.append(read.parse_input("fact: (location ?tile pos1 pos3)"))
-        asks.append(ask)
-
-        ask = []
         ask.append(read.parse_input("fact: (location ?tile pos2 pos1)"))
-        ask.append(read.parse_input("fact: (location ?tile pos2 pos2)"))
-        ask.append(read.parse_input("fact: (location ?tile pos2 pos3)"))
+        ask.append(read.parse_input("fact: (location ?tile pos3 pos1)"))
         asks.append(ask)
 
         ask = []
-        ask.append(read.parse_input("fact: (location ?tile pos3 pos1)"))
+        ask.append(read.parse_input("fact: (location ?tile pos1 pos2)"))
+        ask.append(read.parse_input("fact: (location ?tile pos2 pos2)"))
         ask.append(read.parse_input("fact: (location ?tile pos3 pos2)"))
+        asks.append(ask)
+
+        ask = []
+        ask.append(read.parse_input("fact: (location ?tile pos1 pos3)"))
+        ask.append(read.parse_input("fact: (location ?tile pos2 pos3)"))
         ask.append(read.parse_input("fact: (location ?tile pos3 pos3)"))
         asks.append(ask)
 
-        # for j in asks:
-        #     for i in j:
-        #         print(i)
-
-        return asks
-        # asks.append(read.parse_input("fact: (on ?disk peg2)"))
-        # asks.append(read.parse_input("fact: (on ?disk peg3)"))
-        # answers = []
         # for i in asks:
-        #     answers.append(self.kb.kb_ask(i))
+        #     print(i)
 
-        # tuples = []
-        # for num in range(len(answers)):
-        #     if answers[num]:
-        #         temp_list = []
-        #         for i in answers[num]:
-        #             for j in i.bindings:
-        #                 temp_list.append(int(str(j.constant)[-1:]))
-        #         temp_list.sort()
-        #         tuples.append(tuple(temp_list))
-        #     else:
-        #         tuples.append(tuple())
-        # return (tuple(tuples))
-        pass
+        answers = []
+        for row in asks:
+            answer = []
+            for col in row:
+                ans = self.kb.kb_ask(col)
+                # print(ans)
+                if ans:
+                    num = str(ans).split(":")[2].split("\n")[0][-1]
+                    # print(num)
+                    answer.append(int(num))
+                else:
+                    answer.append(-1)
+            answers.append(tuple(answer))
+
+        # for i in answers:
+        #     print(i)
+        return tuple(answers)
 
     def makeMove(self, movable_statement):
         """
@@ -249,7 +231,16 @@ class Puzzle8Game(GameMaster):
             None
         """
         ### Student code goes here
-        pass
+        sl = movable_statement.terms
+        pre_fact = Fact(Statement(["location", sl[0], sl[1], sl[2]]))
+        inferred_fact = Fact(Statement(['empty', sl[3], sl[4]]))
+        self.kb.kb_retract(pre_fact)
+        self.kb.kb_retract(inferred_fact)
+        new_fact = Fact(Statement(["location", sl[0], sl[3], sl[4]]))
+        inferred_fact = Fact(Statement(['empty', sl[1], sl[2]]))
+        self.kb.kb_assert(new_fact)
+        self.kb.kb_assert(inferred_fact)
+
 
     def reverseMove(self, movable_statement):
         """
