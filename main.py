@@ -205,6 +205,19 @@ class KBTest(unittest.TestCase):
             [21, ((6, 5, 4), (1, -1, 8), (7, 3, 2))],
         ])
 
+    def test09_DFS_Hanoi(self):
+        th = TowerOfHanoiGame()
+        th.read('hanoi_5_all_disks_on_peg_one.txt')
+        required = [
+            'fact: (movable disk1 peg3 peg1)',
+            'fact: (movable disk1 peg3 peg2)',
+        ]
+        th.setWinningCondition(required, 'hanoi_all_forbidden.txt')
+        self.assertFalse(th.isWon())
+
+        solver = SolverDFS(th, ((),(),(1,2,3,4,5)))
+        self.runSolve(solver)
+
 
 if __name__ == '__main__':
     unittest.main()
